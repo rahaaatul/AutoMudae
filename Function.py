@@ -6,6 +6,7 @@ import requests
 from discum.utils.slash import SlashCommander
 
 import Vars
+from libs import utils
 
 botID = "432610292342587392"
 auth = {"authorization": Vars.token}
@@ -18,7 +19,6 @@ def simpleRoll():
     i = 1
     claimed = "❤️"
     unclaimed = "🤍"
-    kakera = "💎"
     rollCommand = SlashCommander(bot.getSlashCommands(botID).json()).get([Vars.rollCommand])
     continueRolling = True
 
@@ -64,27 +64,6 @@ def simpleRoll():
                 for component in components:
                     cardsKakera = component["emoji"]["name"]
                     if cardsKakera in Vars.desiredKakeras:
-                        if cardsKakera == "kakera":
-                            kakeraName = "kakera"
-                        elif cardsKakera == "kakeraP":
-                            kakeraName = "purple kakera"
-                        elif cardsKakera == "kakeraB":
-                            kakeraName = "blue kakera"
-                        elif cardsKakera == "kakeraT":
-                            kakeraName = "teal kakera"
-                        elif cardsKakera == "kakeraG":
-                            kakeraName = "green kakera"
-                        elif cardsKakera == "kakeraY":
-                            kakeraName = "yellow kakera"
-                        elif cardsKakera == "kakeraO":
-                            kakeraName = "orange kakera"
-                        elif cardsKakera == "kakeraR":
-                            kakeraName = "red kakera"
-                        elif cardsKakera == "kakeraW":
-                            kakeraName = "rainbow kakera"
-                        elif cardsKakera == "kakeraL":
-                            kakeraName = "light kakera"
-
                         bot.click(
                             jsonCard[0]["author"]["id"],
                             channelID=jsonCard[0]["channel_id"],
@@ -94,7 +73,7 @@ def simpleRoll():
                             data={"component_type": 2, "custom_id": component["custom_id"]},
                         )
 
-                        print(f"{i:02} - {kakera} --- {cardsKakera} - Reacted to {kakeraName}")
+                        print(f"{i:02} - {utils.get_kakera_emoji(cardsKakera)} --- {cardsKakera} - Reacted to {utils.get_kakera_name(cardsKakera)}")
 
             except (KeyError, IndexError):
                 cardsKakera = "null"
