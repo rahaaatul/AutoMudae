@@ -1,3 +1,3 @@
-pyproject.toml
-__pycache__/Vars.cpython-312.pyc
+*.toml
+*.pyc
 Vars.py
