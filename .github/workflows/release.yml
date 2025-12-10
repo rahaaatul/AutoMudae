@@ -2,7 +2,7 @@ name: CI and Release
 
 on:
   push:
-    branches: [ main ]
+    branches: [ stable ]
   workflow_dispatch:
 
 jobs:
