@@ -1,0 +1,17 @@
+[project]
+name = "automudae"
+version = "0.1.0"
+description = "Automate mudae."
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["discum", "requests", "python-dotenv", "schedule"]
+
+[project.scripts]
+automudae = "Bot:main"
+mudae = "Bot:main"
+
+[tool.uv]
+package = true
+
+[tool.setuptools]
+py-modules = ["Bot", "Function", "Vars"]
