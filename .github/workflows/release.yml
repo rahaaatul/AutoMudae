@@ -26,7 +26,7 @@ jobs:
       - name: Lint with ruff
         uses: astral-sh/ruff-action@v3.5.1
         with:
-          args: check --select E,F --show-source --statistics
+          args: check --select E,F --show-files --statistics
 
       - name: Run tests
         run: |
