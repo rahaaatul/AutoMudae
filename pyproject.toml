@@ -13,5 +13,8 @@ mudae = "cli:main"
 [tool.uv]
 package = true
 
+[dependency-groups]
+dev = ["ruff", "build"]
+
 [tool.setuptools]
 py-modules = ["cli", "roll", "config"]
