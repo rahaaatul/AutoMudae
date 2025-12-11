@@ -1,8 +1,10 @@
 name: Upload Python Package
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["CI and Release"]
+    types:
+      - completed
   workflow_dispatch:
 
 permissions:
@@ -11,18 +13,37 @@ permissions:
 jobs:
   pypi-publish:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     permissions:
       id-token: write
 
     environment:
       name: pypi
-      url: https://pypi.org/project/automudae/${{ github.event.release.tag_name }}
+      url: https://pypi.org/project/automudae/${{ steps.version.outputs.version }}
 
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Get package version
+        id: version
+        run: echo "version=$(grep '^version =' pyproject.toml | sed 's/version = "\(.*\)"/\1/')" >> $GITHUB_OUTPUT
+
+      - name: Check if release exists
+        run: |
+          if gh release view ${{ steps.version.outputs.version }} >/dev/null 2>&1; then
+            echo "Release ${{ steps.version.outputs.version }} exists, proceeding with publish"
+            echo "RELEASE_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "Release ${{ steps.version.outputs.version }} does not exist, skipping publish"
+            echo "RELEASE_EXISTS=false" >> $GITHUB_ENV
+          fi
+
       - name: Download release assets
-        run: gh release download ${{ github.event.release.tag_name }} --dir dist/
+        if: env.RELEASE_EXISTS == 'true'
+        run: gh release download ${{ steps.version.outputs.version }} --dir dist/
 
       - name: Publish release distributions to PyPI
+        if: env.RELEASE_EXISTS == 'true'
         uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           packages-dir: dist/
