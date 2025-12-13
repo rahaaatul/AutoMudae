@@ -32,7 +32,7 @@ jobs:
       - name: Download release assets
         run: |
           echo "Attempting to download release ${{ steps.version.outputs.version }}..."
-          if gh release download ${{ steps.version.outputs.version }} --dir dist/ 2>/dev/null; then
+          if gh release download ${{ steps.version.outputs.version }} --repo ${{ github.repository }} --dir dist/; then
             echo "Release downloaded successfully, proceeding with publish"
             echo "HAS_ASSETS=true" >> $GITHUB_ENV
           else
