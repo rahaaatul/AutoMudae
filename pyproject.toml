@@ -1,10 +1,20 @@
 [project]
-name = "automudae"
-version = "0.1.0"
+name = "AutoMudae"
+version = "0.2.0"
+authors = [{ name = "Rahatul Ghazi", email = "rahatulghazi@gmail.com" }]
 description = "Automate mudae."
 readme = "README.md"
 requires-python = ">=3.9"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
 dependencies = ["discum", "requests", "python-dotenv", "schedule"]
+
+[project.urls]
+Homepage = "https://github.com/rahaaatul/automudae"
+Issues = "https://github.com/rahaaatul/automudae/issues"
 
 [project.scripts]
 automudae = "cli:main"
