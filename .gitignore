@@ -111,7 +111,7 @@ env.bak/
 venv.bak/
 
 # UV (Python package manager)
-uv.lock
+# uv.lock - intentionally committed for reproducible builds
 
 # Spyder project settings
 .spyderproject
