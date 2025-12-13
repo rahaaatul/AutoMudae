@@ -1,60 +1,197 @@
-"""
-Configuration module for Automudae bot.
-
-This module loads environment variables from a .env file and provides default
-configurations for the Discord bot, including authentication tokens, channel
-settings, roll commands, desired kakeras and series, poke roll preferences,
-and repeat intervals.
-
-Attributes:
-    token (str): Discord bot token retrieved from environment variables.
-    channel_id (str): Discord channel ID for bot operations.
-    server_id (str): Discord server ID where the bot operates.
-    roll_command (str): Command prefix for roll operations, defaults to "wa".
-    desired_kakeras (list): List of desired kakera types to collect.
-    desired_series (list): List of desired anime/manga series for rolls.
-    poke_roll (bool): Whether to enable poke roll functionality.
-    repeat_minute (str): Minute interval for repeat operations.
-"""
-
-from dotenv import load_dotenv
+import json
 import os
+import platform
+from pathlib import Path
+from typing import List, Dict, Any
 
-# Load environment variables from .env file to configure the application
-load_dotenv()
 
-# Retrieve Discord bot authentication token from environment variables
-# Falls back to empty string if not set
-token = os.getenv("DISCORD_TOKEN", "")
+class ConfigManager:
+    def __init__(self) -> None:
+        self.config_dir = self._get_config_dir()
+        self.config_dir.mkdir(parents=True, exist_ok=True)
 
-# Retrieve the Discord channel ID where the bot will perform operations
-# Falls back to empty string if not set
-channel_id = os.getenv("CHANNEL_ID", "")
+    def _get_config_dir(self) -> Path:
+        system = platform.system()
 
-# Retrieve the Discord server ID for the bot's operational context
-# Falls back to empty string if not set
-server_id = os.getenv("SERVER_ID", "")
+        if system == "Windows":
+            # Use %APPDATA% directory on Windows
+            config_dir = Path(os.environ.get("APPDATA", "")) / "automudae"
+        elif system == "Darwin":  # macOS
+            # Use Application Support directory on macOS
+            config_dir = Path.home() / "Library" / "Application Support" / "automudae"
+        else:  # Linux and other Unix-like systems
+            # Use XDG config directory standard
+            config_dir = Path.home() / ".config" / "automudae"
 
-# Retrieve the command prefix used for roll operations
-# Defaults to "wa" if not specified in environment variables
-roll_command = os.getenv("ROLL_COMMAND", "wa")
+        return config_dir
 
-# Retrieve desired kakera types as a comma-separated list and split into a list
-# Defaults to a predefined set of kakera types if not specified
-desired_kakeras = os.getenv(
-    "DESIRED_KAKERAS", "kakeraP,kakeraY,kakeraO,kakeraR,kakeraW,kakeraL"
-).split(",")
+    def _get_file_path(self, config_type: str) -> Path:
+        return self.config_dir / f"{config_type}.json"
 
-# Retrieve desired anime/manga series as a comma-separated list and split into a list
-# Defaults to popular series if not specified
-desired_series = os.getenv("DESIRED_SERIES", "One Piece,Dragon Ball Z,Death Note").split(
-    ","
-)
+    def _load_json(self, config_type: str) -> Dict[str, Any]:
+        file_path = self._get_file_path(config_type)
 
-# Retrieve poke roll setting and convert to boolean
-# Defaults to True if not specified or invalid
-poke_roll = os.getenv("POKE_ROLL", "True").lower() == "true"
+        if not file_path.exists():
+            return {}
 
-# Retrieve the minute interval for repeat operations as a string
-# Defaults to "25" minutes if not specified
-repeat_minute = os.getenv("REPEAT_MINUTE", "25")
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
+        except (json.JSONDecodeError, IOError):
+            # Return empty dict on any file operation errors
+            return {}
+
+    def _save_json(self, config_type: str, data: Dict[str, Any]) -> None:
+        file_path = self._get_file_path(config_type)
+
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except IOError:
+            raise Exception(f"Failed to save {config_type} configuration")
+
+    # Public API - Credentials Management
+    def get_credentials(self) -> Dict[str, Any]:
+        return self._load_json("credentials")
+
+    def set_credential(self, key: str, value: Any) -> None:
+        credentials = self.get_credentials()
+        credentials[key] = value
+        self._save_json("credentials", credentials)
+
+    def get_credential(self, key: str, default: Any = None) -> Any:
+        credentials = self.get_credentials()
+        return credentials.get(key, default)
+
+    # Private helper methods for preferences
+    def _load_preferences(self, preference_type: str) -> List[str]:
+        file_path = self._get_file_path(preference_type)
+
+        if not file_path.exists():
+            return []
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return data if isinstance(data, list) else []
+        except (json.JSONDecodeError, IOError):
+            return []
+
+    def _save_preferences(self, preference_type: str, items: List[str]) -> None:
+        file_path = self._get_file_path(preference_type)
+
+        try:
+            with open(file_path, "w", encoding="utf-8") as f:
+                json.dump(items, f, indent=2, ensure_ascii=False)
+        except IOError:
+            raise Exception(f"Failed to save {preference_type} preferences")
+
+    # Public API - Character Preferences
+    def get_characters(self) -> List[str]:
+        return self._load_preferences("characters")
+
+    def add_character(self, character: str) -> bool:
+        characters = self.get_characters()
+        if character not in characters:
+            characters.append(character)
+            self._save_preferences("characters", characters)
+            return True
+        return False
+
+    def remove_character(self, character: str) -> bool:
+        characters = self.get_characters()
+        if character in characters:
+            characters.remove(character)
+            self._save_preferences("characters", characters)
+            return True
+        return False
+
+    def clear_characters(self) -> None:
+        self._save_preferences("characters", [])
+
+    # Public API - Series Preferences
+    def get_series(self) -> List[str]:
+        return self._load_preferences("series")
+
+    def add_series(self, series: str) -> bool:
+        series_list = self.get_series()
+        if series not in series_list:
+            series_list.append(series)
+            self._save_preferences("series", series_list)
+            return True
+        return False
+
+    def remove_series(self, series: str) -> bool:
+        series_list = self.get_series()
+        if series in series_list:
+            series_list.remove(series)
+            self._save_preferences("series", series_list)
+            return True
+        return False
+
+    def clear_series(self) -> None:
+        self._save_preferences("series", [])
+
+    # Public API - Kakera Preferences
+    def get_kakeras(self) -> List[str]:
+        kakeras = self._load_preferences("kakeras")
+        # Return defaults if no kakeras configured
+        if not kakeras:
+            return ["kakeraP", "kakeraY", "kakeraO", "kakeraR", "kakeraW", "kakeraL"]
+        return kakeras
+
+    def add_kakera(self, kakera: str) -> bool:
+        kakeras = self.get_kakeras()
+        if kakera not in kakeras:
+            kakeras.append(kakera)
+            self._save_preferences("kakeras", kakeras)
+            return True
+        return False
+
+    def remove_kakera(self, kakera: str) -> bool:
+        kakeras = self.get_kakeras()
+        if kakera in kakeras:
+            kakeras.remove(kakera)
+            self._save_preferences("kakeras", kakeras)
+            return True
+        return False
+
+    def clear_kakeras(self) -> None:
+        self._save_preferences("kakeras", [])
+
+    def reset_kakeras(self) -> None:
+        """Reset kakeras to default values"""
+        self._save_preferences(
+            "kakeras",
+            ["kakeraP", "kakeraY", "kakeraO", "kakeraR", "kakeraW", "kakeraL"],
+        )
+
+    def reset_credentials(self) -> None:
+        """Reset all credentials (clear them)"""
+        self._save_json("credentials", {})
+
+    def reset_characters(self) -> None:
+        """Reset characters (clear them)"""
+        self._save_preferences("characters", [])
+
+    def reset_series(self) -> None:
+        """Reset series (clear them)"""
+        self._save_preferences("series", [])
+
+
+# Global configuration manager instance
+config_manager = ConfigManager()
+
+# Legacy compatibility - expose configuration values as module-level variables
+token = config_manager.get_credential("token", "")
+channel_id = config_manager.get_credential("channel_id", "")
+server_id = config_manager.get_credential("server_id", "")
+roll_command = config_manager.get_credential("roll_command", "wa")
+poke_roll = config_manager.get_credential("poke_roll", True)
+repeat_minute = config_manager.get_credential("repeat_minute", "25")
+
+# User preferences
+desired_characters = config_manager.get_characters()
+desired_series = config_manager.get_series()
+desired_kakeras = config_manager.get_kakeras()
