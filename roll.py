@@ -82,7 +82,7 @@ def simpleRoll():
                     match = re.search(r"(\d+)\s+ROLLS LEFT", footer_text)
                     if match:
                         rolls_left = int(match.group(1))
-                        print(f"⚠️ {rolls_left} rolls left")
+                        # Removed rolls left warning for cleaner logs
 
             # Determine if card is claimable (no footer icon_url means unclaimed)
             if (
@@ -204,6 +204,7 @@ def simpleRoll():
     except KeyboardInterrupt:
         print("\nRolling stopped by user.")
         return
+    print()
     print("Rolling ended")
 
     if config.poke_roll:
