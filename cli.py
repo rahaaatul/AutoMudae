@@ -421,7 +421,7 @@ def main():
                 time_string = ":" + config.repeat_minute
 
             # Wait for the scheduled time to run
-            schedule.every().hour.at(time_string).do(simpleRoll)
+            schedule.every().hour.at(time_string).do(lambda: simpleRoll(scheduled=True))
 
             try:
                 while True:

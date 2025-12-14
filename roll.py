@@ -13,7 +13,7 @@ bot = discum.Client(token=config.token, log=False)
 url = f"https://discord.com/api/v8/channels/{config.channel_id}/messages"
 
 
-def simpleRoll():
+def simpleRoll(scheduled=False):
     print(time.strftime("Rolling at %H:%M - %d/%m/%y", time.localtime()))
     roll_count = 1
     failed_rolls = 0
@@ -204,8 +204,12 @@ def simpleRoll():
     except KeyboardInterrupt:
         print("\nRolling stopped by user.")
         return
-    print()
-    print("Rolling ended")
+    if scheduled:
+        print()
+        print("Rolling completed. Waiting for next scheduled run...")
+    else:
+        print()
+        print("Rolling ended")
 
     if config.poke_roll:
         print("\nTrying to roll Pokeslot")
