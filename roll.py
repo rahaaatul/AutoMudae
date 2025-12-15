@@ -12,6 +12,36 @@ auth = {"authorization": config.token}
 bot = discum.Client(token=config.token, log=False)
 url = f"https://discord.com/api/v8/channels/{config.channel_id}/messages"
 
+# Initialize slash commander
+slash_commands = bot.getSlashCommands(bot_id).json()
+commander = SlashCommander(slash_commands)
+
+
+def send_slash_command(command_name, options=None):
+    """
+    Send a Mudae slash command with optional parameters.
+
+    Args:
+        command_name (str or list): The command name (e.g., "wa", ["commandsearch"])
+        options (dict, optional): Command options as a dict (e.g., {"input": "kakera"})
+
+    Returns:
+        None - Sends the command via the bot
+    """
+    if isinstance(command_name, str):
+        command_path = [command_name]
+    else:
+        command_path = command_name
+
+    if options:
+        command_data = commander.get(command_path, options)
+    else:
+        command_data = commander.get(command_path)
+
+    bot.triggerSlashCommand(
+        bot_id, config.channel_id, config.server_id, data=command_data
+    )
+
 
 def simpleRoll(scheduled=False):
     print(time.strftime("Rolling at %H:%M - %d/%m/%y", time.localtime()))
@@ -22,19 +52,14 @@ def simpleRoll(scheduled=False):
     unclaimed = "🤍"
     kakera = "💎"
     emoji = "👍"
-    roll_command = SlashCommander(bot.getSlashCommands(bot_id).json()).get(
-        [config.roll_command]
-    )
     continue_rolling = True
 
     try:
         # Main rolling loop - continues until limits reached or user stops
         while (continue_rolling or failed_rolls < 4) and rolls_left > 0:
             # Send roll command to Mudae bot
-            bot.triggerSlashCommand(
-                bot_id, config.channel_id, config.server_id, data=roll_command
-            )
-            time.sleep(1.8)  # Rate limiting delay
+            send_slash_command(config.roll_command)
+            time.sleep(1)  # Rate limiting delay
 
             # Fetch the latest message (should be the character card)
             r = requests.get(url, headers=auth)
@@ -213,4 +238,4 @@ def simpleRoll(scheduled=False):
 
     if config.poke_roll:
         print("\nTrying to roll Pokeslot")
-        requests.post(url=url, headers=auth, data={"content": "$p"})
+        send_slash_command("pokeslot")
