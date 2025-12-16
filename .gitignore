@@ -178,3 +178,6 @@ yarn-error.log*
 # Optional: Uncomment if using these tools
 # .terraform/
 # .serverless/
+
+# Ruff cache
+.ruff_cache
