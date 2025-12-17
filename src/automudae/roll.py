@@ -3,7 +3,7 @@ import json
 import re
 import time
 import requests
-import config
+from . import config
 from discum.utils.slash import SlashCommander
 
 # Mudae bot constants

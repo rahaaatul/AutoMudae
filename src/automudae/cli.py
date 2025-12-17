@@ -1,9 +1,9 @@
-import config
+from . import config
 import time
 import schedule
 import argparse
 import sys
-from roll import simpleRoll
+from .roll import simpleRoll
 import pathlib
 import importlib.metadata
 
