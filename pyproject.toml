@@ -17,14 +17,15 @@ Homepage = "https://github.com/rahaaatul/automudae"
 Issues = "https://github.com/rahaaatul/automudae/issues"
 
 [project.scripts]
-automudae = "cli:main"
-mudae = "cli:main"
+automudae = "automudae.cli:main"
+mudae = "automudae.cli:main"
 
 [tool.uv]
 package = true
 
 [dependency-groups]
-dev = ["ruff", "build"]
-
-[tool.setuptools]
-py-modules = ["cli", "roll", "config"]
+dev = [
+    "ruff",
+    "build",
+    "pytest>=8.4.2",
+]
